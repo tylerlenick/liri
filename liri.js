@@ -35,7 +35,7 @@ switch(operation) {
         console.log("Not a valid command...");
 
 
-}
+};
 
 
 function spotifySearch() {
@@ -45,28 +45,123 @@ function spotifySearch() {
           console.log("---------------ERROR");
           return console.log('Error occurred: ' + err);
           console.log("--------------------");
+        } else {
+
+            var songInfo = [
+                
+                "Artist Name: " + data.tracks.items[0].artists[0].name,
+                "Song Name: " + data.tracks.items[0].name, 
+                "Song Preview: " + data.tracks.items[0].preview_url,
+                "Album Name: " + data.tracks.items[0].album.name,
+            ]
+
+            for (var i = 0; i < songInfo.length; i++) {
+
+
+                console.log(songInfo[i]);
+
+                fs.appendFile('log.txt', '\n' + songInfo[i] + '\n', (error) => {
+                    if (error) throw error;
+                });
+      
+            }
+   
         }
       
-      console.log(JSON.stringify(data.tracks.items[0].artists[0].name)); 
-      console.log(JSON.stringify(data.tracks.items[0].name));
-      console.log(JSON.stringify(data.tracks.items[0].external_urls.spotify));
-      console.log(JSON.stringify(data.tracks.items[0].album.name)); 
-      
-      });
+    });
 };
 
 function twitterFunction() {
 
     var userName = { screen_name: userInput };
-    twitterClient.get('statuses/user_timeline', userName, function(error, tweets, response) {
-    if (!error) {
+    twitterClient.get('statuses/user_timeline', userName, function(err, tweets, response) {
+    if (!err) {
         for (var i = 0; i < tweets.length; i++) {
-            var tweetsArr = tweets[i].text
-            console.log(tweetsArr);
-        }
-      }
+           
+            console.log(tweets[i].text);
+
+            fs.appendFile('log.txt', '\n' + tweets[i].text + '\n', (err) => {
+                if (err) throw err;
+            });
+
+        };
+
+        
+    } else {
+        console.log("---------------ERROR");
+        return console.log('Error occurred: ' + err);
+        console.log("--------------------");
+    }
 
     
     });
 
 }
+
+function movie() {
+    request("http://www.omdbapi.com/?t=" + userInput + "&apikey=trilogy", function(err, response, body) {
+        if (err) {
+
+            console.log("---------------ERROR");
+            return console.log('Error occurred: ' + err);
+            console.log("--------------------");
+
+        }  else if (!err && response.statusCode === 200) {
+
+            var body = JSON.parse(body)
+   
+            var movieInfo = [
+                
+                "Title: " + body.Title,  
+                "Year: " + body.Year,  
+                "IMDB: " + body.imdbRating,   
+                "Rotten Tomatoes: " + body.Ratings[1].Value,      
+                "Country: " + body.Country,
+                "Language: " + body.Language,
+                "Plot: " + body.Plot,
+                "Actors: " + body.Actors,
+                
+            ];
+            for (var i = 0; i < movieInfo.length; i++) {  
+
+                console.log(movieInfo[i]);
+
+                fs.appendFile('log.txt', '\n' + movieInfo[i] + '\n', (err) => {
+                    if (err) throw err;
+                });
+            };
+        }
+    });
+};
+
+function doWhat() {
+    fs.readFile('random.txt', 'utf8', (error, data) => {
+        if (error) {
+            console.log("=======================")
+            console.log(error);
+            console.log("=======================")
+        }
+        else {
+            // Split out the command name and the parameter name
+            var cmdString = data.split(',');
+            var command = cmdString[0].trim();
+            var input = cmdString[1].trim();
+            userInput = input
+
+            switch (command) {
+                case 'my-tweets':
+                    myTweets();
+                    break;
+
+                case 'spotify-this-song':
+                    spotifySong(input);
+                    break;
+
+                case 'movie-this':
+                    movieLook(input);
+                    break;
+            };
+        };
+    });
+};
+
